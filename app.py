@@ -11,6 +11,8 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+test_black = True
+
 APP_TOKEN = os.environ.get('TOKEN')
 
 
