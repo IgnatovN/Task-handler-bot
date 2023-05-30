@@ -1,9 +1,10 @@
-import logging
 import os
+import logging
 from tabulate import tabulate
 
-import pandas as pd
 from aiogram import Bot, Dispatcher, executor, types
+import pandas as pd
+
 
 logging.basicConfig(
     format="%(levelname)s; %(asctime)s - %(message)s",
