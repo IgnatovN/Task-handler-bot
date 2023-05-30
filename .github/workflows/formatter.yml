@@ -10,5 +10,3 @@ jobs:
         with:
           black_args: .
       - uses: isort/isort-action@master
-        with:
-          configuration: --overwrite-in-place
