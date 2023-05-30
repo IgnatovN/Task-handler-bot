@@ -1,12 +1,18 @@
-name: reformat files
+name: Format code
+
 on: [push, pull_request]
 
+
 jobs:
-  build:
+  format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: psf/black@stable
-        with:
-          black_args: .
-      - uses: isort/isort-action@master
+      - uses: actions/checkout@v2
+      - name: Format code with black
+        run: |
+          pip install black
+          black .
+      - name: Sort imports with isort
+        run: |
+          pip install isort
+          isort .
