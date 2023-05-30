@@ -1,6 +1,5 @@
-name: Run isort
+name: reformat files
 on: [push, pull_request]
-
 
 jobs:
   build:
@@ -10,3 +9,6 @@ jobs:
       - uses: psf/black@stable
         with:
           black_args: .
+      - uses: isort/isort-action@master
+        with:
+          configuration: --overwrite-in-place
