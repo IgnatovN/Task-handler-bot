@@ -26,7 +26,8 @@ def get_todo_data():
 
 @dp.message_handler(commands='all')
 async def all_tasks(payload: types.Message):
-    await payload.reply(f"```{tabulate(get_todo_data(), showindex=False, headers='keys', tablefmt='pipe', stralign='center')}```", parse_mode='Markdown'
+    await payload.reply(f"```{tabulate(get_todo_data(), showindex=False, headers='keys', tablefmt='pipe', stralign='center')}```",
+                        parse_mode='Markdown'
     )
 
 
