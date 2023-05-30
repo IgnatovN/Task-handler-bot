@@ -15,4 +15,4 @@ jobs:
       - name: Sort imports with isort
         run: |
           pip install isort
-          isort .
+          isort --profile black .
