@@ -11,4 +11,4 @@ jobs:
           black_args: .
       - uses: isort/isort-action@master
         with:
-          configuration: --interactive
+          configuration: --check-only False --diff False
