@@ -10,5 +10,3 @@ jobs:
         with:
           black_args: .
       - uses: isort/isort-action@master
-        with:
-          configuration: --check-only False --diff False
