@@ -1,61 +1,71 @@
+"""Task handler bot
+Functions:
+1. Add task to list
+2. Change task status to 'completed' and delete it
+3. Show task list"""
+
 import logging
 import os
-
-import pandas as pd
-from aiogram import Bot, Dispatcher, executor, types
 from tabulate import tabulate
+
+from aiogram import Bot, Dispatcher, executor, types
+import pandas as pd
+
 
 logging.basicConfig(
     format="%(levelname)s; %(asctime)s - %(message)s",
     datefmt="%d-%b-%y %H-%M-%S",
-    level=logging.INFO,
+    level=logging.INFO
 )
 
 
-APP_TOKEN = os.environ.get("TOKEN")
+APP_TOKEN = os.environ.get('TOKEN')
 
 
-PATH_TO_TABLE = "todo_list.csv"
+PATH_TO_TABLE = 'todo_list.csv'
 
 bot = Bot(token=APP_TOKEN)
 dp = Dispatcher(bot)
 
 
 def get_todo_data():
+    """Returns current task list from csv file"""
     return pd.read_csv(PATH_TO_TABLE)
 
 
-@dp.message_handler(commands="all")
+@dp.message_handler(commands='all')
 async def all_tasks(payload: types.Message):
+    """Show all tasks handler"""
     await payload.reply(
         f"```{tabulate(get_todo_data(), showindex=False, headers='keys', tablefmt='pipe', stralign='center')}```",
-        parse_mode="Markdown",
+        parse_mode='Markdown'
     )
 
 
-@dp.message_handler(commands="add")
+@dp.message_handler(commands='add')
 async def add_task(payload: types.Message):
+    """Add task handler"""
     text = payload.get_args().strip()
-    new_task = pd.DataFrame({"task": [text], "status": ["active"]})
+    new_task = pd.DataFrame({'task': [text], 'status': ['active']})
     updated_task = pd.concat([get_todo_data(), new_task], ignore_index=True, axis=0)
 
     updated_task.to_csv(PATH_TO_TABLE, index=False)
 
-    logging.info(f"Добавлена задача - {text}")
-    await payload.reply(f'Добавлена задача - "{text}"', parse_mode="Markdown")
+    logging.info('Добавлена задача - %s', text)
+    await payload.reply(f'Добавлена задача - "{text}"', parse_mode='Markdown')
 
 
-@dp.message_handler(commands="done")
+@dp.message_handler(commands='done')
 async def complete_task(payload: types.Message):
+    """Mark completed tasks handler"""
     text = payload.get_args().strip()
-    df = get_todo_data()
-    df.loc[df.task == text, "status"] = "complete"
+    data = get_todo_data()
+    data.loc[data.task == text, 'status'] = 'complete'
 
-    df.to_csv(PATH_TO_TABLE, index=False)
+    data.to_csv(PATH_TO_TABLE, index=False)
 
-    logging.info(f"Выполнена задача - {text}")
-    await payload.reply(f'Выполнена задача - "{text}"', parse_mode="Markdown")
+    logging.info('Выполнена задача - %s', text)
+    await payload.reply(f'Выполнена задача - "{text}"', parse_mode='Markdown')
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     executor.start_polling(dp)
