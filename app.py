@@ -9,8 +9,8 @@ import os
 from tabulate import tabulate
 
 from aiogram import Bot, Dispatcher, executor, types
+from clickhouse_driver import Client
 import pandas as pd
-
 
 logging.basicConfig(
     format="%(levelname)s; %(asctime)s - %(message)s",
@@ -18,38 +18,42 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-
 APP_TOKEN = os.environ.get('TOKEN')
-
 
 PATH_TO_TABLE = 'todo_list.csv'
 
 bot = Bot(token=APP_TOKEN)
 dp = Dispatcher(bot)
 
-
-def get_todo_data():
-    """Returns current task list from csv file"""
-    return pd.read_csv(PATH_TO_TABLE)
+connection = Client(
+    host='localhost',
+    user='user',
+    password='password',
+    port=9000,
+    database='todo'
+)
 
 
 @dp.message_handler(commands='all')
 async def all_tasks(payload: types.Message):
-    """Show all tasks handler"""
+    """Show all tasks"""
+    all_data = connection.execute("SELECT * FROM todo.todo")
+
     await payload.reply(
-        f"```{tabulate(get_todo_data(), showindex=False, headers='keys', tablefmt='pipe', stralign='center')}```",
+        f"```{pd.DataFrame(all_data, columns=['text', 'status']).to_markdown()}```",
         parse_mode='Markdown'
     )
 
 
 @dp.message_handler(commands='add')
 async def add_task(payload: types.Message):
-    """Add task handler"""
+    """Add task to list"""
     text = payload.get_args().strip()
-    new_task = pd.DataFrame({'task': [text], 'status': ['active']})
-    updated_task = pd.concat([get_todo_data(), new_task], ignore_index=True, axis=0)
 
-    updated_task.to_csv(PATH_TO_TABLE, index=False)
+    connection.execute(
+        "INSERT INTO todo.todo (text, status) VALUES (%(text)s, %(status)s)",
+        {"text": text, "status": "active"}
+    )
 
     logging.info('Добавлена задача - %s', text)
     await payload.reply(f'Добавлена задача - "{text}"', parse_mode='Markdown')
@@ -59,13 +63,15 @@ async def add_task(payload: types.Message):
 async def complete_task(payload: types.Message):
     """Mark completed tasks handler"""
     text = payload.get_args().strip()
-    data = get_todo_data()
-    data.loc[data.task == text, 'status'] = 'complete'
 
-    data.to_csv(PATH_TO_TABLE, index=False)
+    connection.execute(
+        "ALTER TABLE todo.todo UPDATE status = 'complete' WHERE text = %(text)s",
+        {"text": text}
+    )
 
     logging.info('Выполнена задача - %s', text)
     await payload.reply(f'Выполнена задача - "{text}"', parse_mode='Markdown')
+
 
 if __name__ == '__main__':
     executor.start_polling(dp)
